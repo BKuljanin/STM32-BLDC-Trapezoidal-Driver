@@ -27,6 +27,9 @@ int main(void)
   // Initializing EN pins for U,V,W PWM commands
   en_uvw_init();
 
+  //
+  bldc_test_run();
+
   while (1)
   {
 	  if (measurement_ready == 1)

@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+#define MAX_DUTY_CYCLE 50
+
 typedef enum
 {
     PHASE_U = 0,

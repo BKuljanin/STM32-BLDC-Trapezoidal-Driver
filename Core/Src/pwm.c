@@ -130,7 +130,12 @@ void tim1_pwm_set_duty_percent(uint32_t duty, BLDC_Phase_t phase)
 {
 	//Input is duty cycle in %
 
-    if (duty > 100) duty = 100;  // limit to 100 %
+    if (duty > 100) duty = 100;  // limit to 100 % in case input is >100%
+
+    if (duty > MAX_DUTY_CYCLE) // Limit duty cycle to maximum allowed
+    {
+    	duty = MAX_DUTY_CYCLE;
+    }
 
     // Setting up count value as a percentage of ARR
     uint32_t count_value = ((uint32_t)duty * TIM1->ARR) / 100; // First multiplication then division because of integer division
