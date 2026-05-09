@@ -4,6 +4,7 @@
 #include "as5600.h"
 #include "adc.h"
 #include "pwm.h"
+#include "gpio.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -22,6 +23,9 @@ int main(void)
 
   // Initializing timer 3 to capture pulse width
   tim3_pa6_1mhz_init();
+
+  // Initializing EN pins for U,V,W PWM commands
+  en_uvw_init();
 
   while (1)
   {
