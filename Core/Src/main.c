@@ -2,6 +2,8 @@
 #include "i2c.h"
 #include "timer.h"
 #include "as5600.h"
+#include "adc.h"
+#include "pwm.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
