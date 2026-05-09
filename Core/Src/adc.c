@@ -17,10 +17,11 @@
 #define CR2_SWSTART (1U<<30)
 //#define CR2_CONT (1U<<1)
 #define CR2_JEOCIE (1U<<7)
+#define CR2_ADCPRE (1U<<16)
 
 
 
-void back_emf_adc_dma_init(void)
+void back_emf_adc_init(void)
 {
 	/* Configure the ADC GPIO pins: PC3, PB0, PA7 */
 
@@ -79,6 +80,9 @@ void back_emf_adc_dma_init(void)
 	// ADC JSQR sequence length of injected ADC, reference manual p388
 	ADC1->JSQR &= ~ (1U<<20);
 	ADC1->JSQR &= ~ (1U<<21);
+
+	// Setting prescaler to 4 to not be above maximum clock speed for ADC (36MHz max)
+	ADC->CCR |= CR2_ADCPRE;
 
 	// Setting up interrupt for injected channels
 	ADC1->CR1 |= CR2_JEOCIE; // Reference manual p381
