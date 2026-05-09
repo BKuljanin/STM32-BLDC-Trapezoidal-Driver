@@ -13,9 +13,13 @@
 #define CCER_CC2E (1U<<4)
 #define CCER_CC3E (1U<<8)
 #define OC_PWM1 ((1U<<6) | (1U<<5))
+#define OC_PWM2 ((1U<<14) | (1U<<13))
+#define OC_PWM3 ((1U<<6) | (1U<<5))
 #define CR1_CEN (1U<<0)
 #define CR1_CENTER_MODE1 (1U<<5)
 #define CCMR1_OC1PE (1U<<3)
+#define CCMR1_OC2PE (1U<<11)
+#define CCMR1_OC3PE (1U<<3)
 #define TIM_BDTR_MOE (1U<<15)
 
 // Setting up TRGO for ADC when timer 2 reaches ARR
@@ -92,13 +96,18 @@ int tim1_pwm_init(uint32_t f_pwm_hz, uint16_t resolution)
 	   the hardware misses the match event, causing 100% or 0% pulse.
 	   Preload buffers the update in a shadow register, loading it only at the end of the cycle
 	   to ensure the counter always hits the new target correctly.*/
-	TIM1->CCMR1 |= CCMR1_OC1PE;
+	TIM1->CCMR1 |= CCMR1_OC1PE;	// Channel 1
+	TIM1->CCMR1 |= CCMR1_OC2PE; // Channel 2
+	TIM1->CCMR2 |= CCMR1_OC3PE; // Channel 3
 
 	// Set output compare PWM1 mode
 	TIM1->CCMR1 |= OC_PWM1; // Reference manual p495. Setting5 bits 6 and 5 to 1. 110 is PWM mode 1, pin is high only while CNT<CCR1
 	/* Using PWM1 mode for the PWM that will go to high side MOSFET. Low side MOSFET will be inverted.
 	  The signal will be high until CCR1 is reached and it says low at ARR. Then counting backwards
 	  starts and signal is low until CCR1 is reached again. ARR is in the middle of the pulse (signal is low then on high side) */
+
+	TIM1->CCMR1 |= OC_PWM2;	// Channel 2 PWM mode
+	TIM1->CCMR2 |= OC_PWM3; // Channel 3 PWM mode
 
 	// Enable tim1 ch1,ch,ch3 in compare mode
 	// CH1
@@ -142,22 +151,21 @@ void tim1_pwm_set_duty_percent(uint32_t duty, BLDC_Phase_t phase)
 
     default:
     	break;
-
     }
 
 }
 
 void tim1_trig_adc(void)
 {
-	// Trigger for ADC conversion set up at ARR (when the current stabilizes and switching noise settles) at channel 2
+	// Trigger for ADC conversion set up at ARR (when the current stabilizes and switching noise settles) at channel 4
 
-	// Loading ARR value of channel 1 (PWM) to capture/compare register for channel 2 (CCR2)
-	TIM2->CCR2 = TIM2->ARR;
+	// Loading ARR value of tim 1 (PWM) to capture/compare register for channel 4 (CCR2)
+	TIM1->CCR4 = TIM1->ARR;
 
-	// Setting up TIM2 CH2 as output compare in toggle mode
+	// Setting up TIM1 CH4 as output compare in toggle mode
  	TIM2->CCMR1 |= CCMR1_OC2M_TOGGLE; // Reference manual p495 bits 12-14 OC2M (output compare for channel 2), TOGGLE mode selected (011). Once ARR is reached output is toggled
  	// Since CH2 output compare is in toggle mode (toggles on ARR), ADC is triggered on both rising and falling edge (see ADC config)
 
-	// Enabling TIM2 channel 2 in output output mode
+	// Enabling TIM2 channel 2 in output mode
 	TIM2->CCER |= CCER_CC2E; // Reference manual p499 bit 4 CC2E
 }
