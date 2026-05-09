@@ -2,6 +2,7 @@
 #define INC_BLDC_H_
 
 #include "main.h"
+#include "pwm.h"
 
 #define MAX_DUTY_CYCLE 50
 
