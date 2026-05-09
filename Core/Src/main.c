@@ -5,6 +5,7 @@
 #include "adc.h"
 #include "pwm.h"
 #include "gpio.h"
+#include "bldc.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -27,8 +28,11 @@ int main(void)
   // Initializing EN pins for U,V,W PWM commands
   en_uvw_init();
 
-  //
-  bldc_test_run();
+  // Initializing TIM1 PWM: 20 kHz, 8-bit resolution
+  tim1_pwm_init(20000, 8);
+
+  // Test function for running BLDC by commutating and delaying
+  bldc_test_run((uint32_t)200, (uint32_t)10);
 
   while (1)
   {
