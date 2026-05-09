@@ -23,8 +23,8 @@
 #define TIM_BDTR_MOE (1U<<15)
 
 // Setting up TRGO for ADC when timer 2 reaches ARR
-#define CCER_CC2E (1U<<4)
-#define CCMR1_OC2M_TOGGLE ((1U<<12) | (1U<<13))
+#define CCER_CC4E (1U<<12)
+#define CCMR1_OC4M_TOGGLE ((1U<<12) | (1U<<13))
 
 int tim1_pwm_init(uint32_t f_pwm_hz, uint16_t resolution)
 {
@@ -163,9 +163,9 @@ void tim1_trig_adc(void)
 	TIM1->CCR4 = TIM1->ARR;
 
 	// Setting up TIM1 CH4 as output compare in toggle mode
- 	TIM2->CCMR1 |= CCMR1_OC2M_TOGGLE; // Reference manual p495 bits 12-14 OC2M (output compare for channel 2), TOGGLE mode selected (011). Once ARR is reached output is toggled
+ 	TIM1->CCMR2 |= CCMR1_OC4M_TOGGLE; // Reference manual p495 bits 12-14 OC2M (output compare for channel 2), TOGGLE mode selected (011). Once ARR is reached output is toggled
  	// Since CH2 output compare is in toggle mode (toggles on ARR), ADC is triggered on both rising and falling edge (see ADC config)
 
 	// Enabling TIM2 channel 2 in output mode
-	TIM2->CCER |= CCER_CC2E; // Reference manual p499 bit 4 CC2E
+	TIM1->CCER |= CCER_CC4E; // Reference manual p499 bit 4 CC2E
 }
