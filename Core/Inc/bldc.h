@@ -2,7 +2,6 @@
 #define INC_BLDC_H_
 
 #include "main.h"
-#include "pwm.h"
 
 #define MAX_DUTY_CYCLE 50
 
@@ -14,5 +13,6 @@ typedef enum
 
 } BLDC_Phase_t;
 
+void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle);
 
 #endif /* INC_BLDC_H_ */
