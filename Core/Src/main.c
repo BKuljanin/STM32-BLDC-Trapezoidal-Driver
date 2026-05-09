@@ -32,7 +32,7 @@ int main(void)
   tim1_pwm_init(20000, 8);
 
   // Test function for running BLDC by commutating and delaying
-  bldc_test_run((uint32_t)200, (uint32_t)10);
+  //bldc_test_run((uint32_t)200, (uint32_t)10);
 
   while (1)
   {
