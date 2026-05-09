@@ -1,4 +1,5 @@
 #include "stm32f4xx.h"
+#include "pwm.h"
 // TIM1 will be used, datasheet p16, connected to APB2 bus (100 MHz)
 
 // Setting up PWM on timer 2 channel 1
@@ -75,8 +76,10 @@ int tim1_pwm_init(uint32_t f_pwm_hz, uint16_t resolution)
 	// Clear timer counter
 	TIM1->CNT = 0; // Reference manual p509
 
-	// Initializing duty cycle. CCR1, value that PWM mode 1 compares with counted value
+	// Initializing duty cycle. CCR1, value that PWM mode 1 compares with counted value. Initializing on every channel
 	TIM1->CCR1 = 0;  // Reference manual p504. 0% initialization duty
+	TIM1->CCR2 = 0;
+	TIM1->CCR3 = 0;
 
 	// Center aligned mode 1 selection
 	TIM1->CR1 &= ~ (1U << 6) ; // Reference manual p485 bits 6 and 5: 01 configuration is center aligned mode 1
@@ -106,7 +109,7 @@ int tim1_pwm_init(uint32_t f_pwm_hz, uint16_t resolution)
 	TIM1->CCER |= CCER_CC3E;
 
 	// Enable timer
-	TIM2->CR1 |= CR1_CEN; // Reference manual p485. Timer 2 CR1
+	TIM1->CR1 |= CR1_CEN; // Reference manual p485. Timer 2 CR1
 
 	// Enable output
 	TIM1->BDTR |= TIM_BDTR_MOE;
@@ -114,20 +117,37 @@ int tim1_pwm_init(uint32_t f_pwm_hz, uint16_t resolution)
 	return 0; // Initialization successful
 }
 
-void tim2_pwm_set_duty_percent(uint32_t duty)
+void tim1_pwm_set_duty_percent(uint32_t duty, BLDC_Phase_t phase)
 {
 	//Input is duty cycle in %
 
     if (duty > 100) duty = 100;  // limit to 100 %
 
     // Setting up count value as a percentage of ARR
-    uint32_t count_value = ((uint32_t)duty * TIM2->ARR) / 100; // First multiplication then division because of integer division
+    uint32_t count_value = ((uint32_t)duty * TIM1->ARR) / 100; // First multiplication then division because of integer division
 
-  	TIM2->CCR1 = count_value; // Capture/compare register for channel 1 (CCR1)
+    switch(phase)
+    {
+    case PHASE_U:
+    	TIM1->CCR1 = count_value; // Capture/compare register for channel 1 (CCR1)
+    	break;
+
+    case PHASE_V:
+    	TIM1->CCR2 = count_value;
+    	break;
+
+    case PHASE_W:
+       TIM1->CCR3 = count_value;
+       break;
+
+    default:
+    	break;
+
+    }
 
 }
 
-void tim2_trig_adc(void)
+void tim1_trig_adc(void)
 {
 	// Trigger for ADC conversion set up at ARR (when the current stabilizes and switching noise settles) at channel 2
 
