@@ -2,6 +2,7 @@
 #define INC_BLDC_H_
 
 #include "main.h"
+#include "timer.h"
 
 #define MAX_DUTY_CYCLE      50
 #define BLDC_POLE_PAIRS     7 	 	// Number of poles of BLDC. In this project A2208/14T 1400KV was used

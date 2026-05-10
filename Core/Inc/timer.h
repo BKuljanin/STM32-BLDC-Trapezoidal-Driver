@@ -13,5 +13,6 @@ extern volatile uint32_t rising_previous;
 
 uint32_t tim2_get_delta_us(void);
 void tim2_1mhz_init(void);
+uint32_t read_time_us(void);
 
 #endif /* INC_TIMER_H_ */

@@ -84,31 +84,65 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
     }
     else if (mode == BEMF_MODE)
     {
-        static uint8_t blank = 0;
+        static uint8_t blank = BEMF_BLANK_SAMPLES;	// See below for description of blank
+        static uint32_t crossing_time = 0;
+        static uint32_t commutation_time = 0;
+        static uint32_t half_time = 0;
 
         if (blank > 0)
         {
-            blank--;
+            blank--;	// Due to noise we can falsely detect several crossings around 0V
         }
-        else
+        else if (!crossed)	// If no crossing has happened check if there is a crossing now
         {
-            float bemf = floating_phase_back_emf;
+            float bemf = floating_phase_back_emf;	// Take latest back EMF reading from floating phase
 
-            if ((bemf_previous < 0.0f && bemf >= 0.0f) ||
+            if ((bemf_previous < 0.0f && bemf >= 0.0f) ||	// Check if there is a crossing
                 (bemf_previous >= 0.0f && bemf < 0.0f))
             {
                 crossed = 1;
+
+                // Reading crossing time in us
+                crossing_time = read_time_us();
+
+                // Scheduling next commutation
+                if (commutation_time == 0) {	// This is just for startup since its first commutation. (commutation_time is 0 here)
+                      half_time = 3000;  // 3ms last open loop step delay.
+                  } else {
+                      half_time = crossing_time - commutation_time;	// After startup only this equation decides
+                  }
+
             }
 
-            bemf_previous = bemf;
+            bemf_previous = bemf;	// Saving back EMF value as previous
         }
 
         if (crossed)
         {
-            // TODO: wait 30° electrical before advancing step
-            step    = (step + 1) % 6;
-            crossed = 0;
-            blank   = BEMF_BLANK_SAMPLES;
+
+            // Now we check if time for commutation has passed
+        	uint32_t current_time = read_time_us();
+
+        	if(crossing_time + half_time <= current_time)
+			{
+        		// Now commutate
+        		bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty);
+        		back_emf_float_channel(step_float[step]);
+
+        		// Reading commutation time in us
+        		commutation_time = read_time_us();
+
+        		// Calculating next step
+                step = (step + 1) % 6;
+
+                // Resetting crossed flag
+                crossed = 0;
+
+                // This prevents frequent reading of crossing because of noise around 0 V
+                blank   = BEMF_BLANK_SAMPLES;	// We cant cross again if we crossed once, resetting blank
+			}
+
+
         }
     }
 }
