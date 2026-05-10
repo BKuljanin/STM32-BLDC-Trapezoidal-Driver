@@ -11,4 +11,6 @@ extern volatile uint32_t pulse_width;
 extern volatile uint32_t pulse_period;
 extern volatile uint32_t rising_previous;
 
+uint32_t tim2_get_delta_us(void);
+
 #endif /* INC_TIMER_H_ */

@@ -4,6 +4,7 @@
 #define GPIOAEN (1U<<0)
 #define AFR6_TIM (1U<<25)
 #define TIM3EN (1U<<1)
+#define TIM2EN (1U<<0)
 #define CCMR1_IN_CC1S (1U<<0)
 #define CCMR1_IN_CC2S (1U<<9)
 #define CCER_CC1E (1U<<0)
@@ -17,6 +18,7 @@ volatile uint32_t pulse_width;
 volatile uint32_t pulse_period;
 volatile uint32_t rising_previous;
 
+// Initializing timer for capturing encoder measurements
 void tim3_pa6_1mhz_init(void)
 {
 
@@ -59,7 +61,7 @@ void tim3_pa6_1mhz_init(void)
 	NVIC_EnableIRQ(TIM3_IRQn);
 }
 
-
+// Timer 3 interrupt to capture encoder pulse width
 void TIM3_IRQHandler(void)
 {
 
@@ -86,4 +88,38 @@ void TIM3_IRQHandler(void)
 
 	    return;
 	}
+}
+
+
+// Initializing timer for measuring time and commutation TIMER2
+void tim2_1mhz_init(void)
+{
+	// Enable clock access to tim2
+	RCC->APB1ENR |= TIM2EN; // Reference manual p146 tim3 bit 1
+
+	// Set prescaler
+	TIM2->PSC = 50 - 1; // -1 because of counting from zero, 50 000 000 / 50 = 1 000 000 (1MHz) (uses APB1, system clock is 100 MHz)
+
+	// Set high counting value to reduce wrapping
+	TIM2->ARR = 0xFFFFFFFF;
+
+	// Enable TIM2
+	TIM2->CR1 = CR1_CEN;
+
+}
+
+// Function for reading time in us
+uint32_t read_time_us(void)
+{
+	uint32_t time_passed = TIM2->CNT;
+	return time_passed;
+}
+
+uint32_t tim2_get_delta_us(void)
+{
+      static uint32_t last_time = 0;
+      uint32_t now = TIM2->CNT;
+      uint32_t delta = now - last_time;
+      last_time = now;
+      return delta;
 }

@@ -6,9 +6,12 @@
 #include "pwm.h"
 #include "gpio.h"
 #include "bldc.h"
+#include "pid.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+
+float speed_setpont = 50; // Speed setpoint [deg/s]
 
 CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
 
@@ -39,6 +42,9 @@ int main(void)
   // Initializing ADC measuring of back-emf voltage
   back_emf_adc_init();
 
+  // Initializing TIM2 to measure time and schedule commutation in back EMF mode
+  tim2_1mhz_init();
+
   // Test function for running BLDC by commutating and delaying
   //bldc_test_run((uint32_t)200, (uint32_t)10);
 
@@ -48,12 +54,15 @@ int main(void)
 	  if (measurement_ready == 1)
 	  {
 		  measurement_ready = 0;
-		  as5600_pwm_to_angle();
-		  as5600_calculate_speed();
+		  as5600_pwm_to_angle();	// Collect measured angle
+		  as5600_calculate_speed();	// Calculate angular speed
+
+		  float duty = pi_controller(speed_setpont, encoder.speed, PI_KP, PI_KI,
+				  PI_INTEGRAL_SAT, PI_OUTPUT_SAT_UPPER,  PI_OUTPUT_SAT_LOWER);
 
 		  if (commutation_mode == ENCODER_MODE)
 		  {
-			  bldc_run(20, ENCODER_MODE);
+			  bldc_run(duty, ENCODER_MODE);
 		  }
 	  }
 
