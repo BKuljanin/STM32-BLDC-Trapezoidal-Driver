@@ -60,24 +60,9 @@ static const BLDC_Phase_t step_float[6] = {PHASE_W, PHASE_V, PHASE_U, PHASE_W, P
 
 void bldc_run(uint32_t duty, CommutationMode_t mode)
 {
-    static uint8_t initialized      = 0;
     static float   electrical_offset = 0.0f;
     static float   bemf_previous    = 0.0f;
     static uint8_t crossed          = 0;
-
-    if (!initialized) // Parks the rotor in initial position at startup
-    {
-        bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
-        HAL_Delay(ALIGN_SETTLE_MS);
-        as5600_pwm_to_angle();
-        electrical_offset = encoder.angle * BLDC_POLE_PAIRS;
-
-        /* If electrical angle is above 360 degrees (which it most likely is since elec_angle = mech_angle * BLDC_POLE_PAIRS
-         * We find electrical offset by reducing by full circle in order to get electrical offset between 0 and 360 deg
-         */
-        while (electrical_offset >= 360.0f) electrical_offset -= 360.0f;
-        initialized = 1;
-    }
 
     bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty);
     back_emf_float_channel(step_float[step]);
@@ -127,6 +112,18 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
         }
     }
 }
+
+// Initialize (park) BLDC by bringing PWM to one phase, one is used as sink and one floating
+void bldc_init(void) {
+      bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
+      HAL_Delay(ALIGN_SETTLE_MS);
+      as5600_pwm_to_angle();
+      electrical_offset = encoder.angle * BLDC_POLE_PAIRS;
+
+      /* If electrical angle is above 360 degrees (which it most likely is since elec_angle = mech_angle * BLDC_POLE_PAIRS
+      * We find electrical offset by reducing by full circle in order to get electrical offset between 0 and 360 deg */
+      while (electrical_offset >= 360.0f) electrical_offset -= 360.0f;
+  }
 
 // Drives BLDC like a stepper, cycling through 6 commutation steps with fixed delay
 void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle)

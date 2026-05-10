@@ -117,9 +117,18 @@ uint32_t read_time_us(void)
 
 uint32_t tim2_get_delta_us(void)
 {
-      static uint32_t last_time = 0;
-      uint32_t now = TIM2->CNT;
-      uint32_t delta = now - last_time;
-      last_time = now;
-      return delta;
+	 {
+	      static uint32_t last_time = 0;
+	      static uint8_t first = 1;
+	      uint32_t now = TIM2->CNT;
+	      if (first) {
+	          first = 0;
+	          last_time = now;
+	          return 0;  // No delta on first call, because it can happen that first call happens after few seconds.
+	          // Timer counts until then and can immediatelly saturate PI on first PI call
+	      }
+	      uint32_t delta = now - last_time;
+	      last_time = now;
+	      return delta;
+	  }
 }
