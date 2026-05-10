@@ -10,7 +10,7 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
-CommutationMode_t mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
+CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
 
 int main(void)
 {
@@ -44,11 +44,23 @@ int main(void)
 
   while (1)
   {
+	  /* Encoder mode */
 	  if (measurement_ready == 1)
 	  {
 		  measurement_ready = 0;
 		  as5600_pwm_to_angle();
 		  as5600_calculate_speed();
+
+		  if (commutation_mode == ENCODER_MODE)
+		  {
+			  bldc_run(20, ENCODER_MODE);
+		  }
+	  }
+
+	  /* BEMF mode */
+	  if (commutation_mode == BEMF_MODE)
+	  {
+		  bldc_run(20, BEMF_MODE);  // runs every loop for fast zero crossing detection
 	  }
   }
 

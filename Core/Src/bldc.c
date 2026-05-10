@@ -63,12 +63,16 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
     static float   bemf_previous    = 0.0f;
     static uint8_t crossed          = 0;
 
-    if (!initialized)
+    if (!initialized) // Parks the rotor in initial position at startup
     {
         bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
         HAL_Delay(ALIGN_SETTLE_MS);
         as5600_pwm_to_angle();
         electrical_offset = encoder.angle * BLDC_POLE_PAIRS;
+
+        /* If electrical angle is above 360 degrees (which it most likely is since elec_angle = mech_angle * BLDC_POLE_PAIRS
+         * We find electrical offset by reducing by full circle in order to get electrical offset between 0 and 360 deg
+         */
         while (electrical_offset >= 360.0f) electrical_offset -= 360.0f;
         initialized = 1;
     }
@@ -78,10 +82,16 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 
     if (mode == ENCODER_MODE)
     {
-        float electrical = encoder.angle * BLDC_POLE_PAIRS - electrical_offset;
-        while (electrical <    0.0f) electrical += 360.0f;
-        while (electrical >= 360.0f) electrical -= 360.0f;
-        step = (uint8_t)(electrical / 60.0f) % 6;
+    	// Calculate electrical angle
+        float electrical_angle = encoder.angle * BLDC_POLE_PAIRS;
+        // Wrap electrical angle so its between 0 and 360 deg
+        while (electrical_angle >= 360.0f) electrical_angle -= 360.0f;
+        // Apply calculated offset on wrapped angle
+        electrical_angle -= electrical_offset;
+        // Wrap if after offset angle is negative
+        while (electrical_angle < 0.0f) electrical_angle += 360.0f;
+        // Calculate step (1-6)
+        step = (uint8_t)(electrical_angle / 60.0f) % 6;
     }
     else if (mode == BEMF_MODE)
     {
