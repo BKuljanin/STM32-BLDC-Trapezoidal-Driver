@@ -3,6 +3,9 @@
 #include "adc.h"
 #include "as5600.h"
 
+uint8_t step = 0;  // current commutation step (exposed for debugging)
+float electrical_angle;
+
 static void phase_enable(BLDC_Phase_t phase)
 {
     switch(phase)
@@ -59,7 +62,6 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 {
     static uint8_t initialized      = 0;
     static float   electrical_offset = 0.0f;
-    static uint8_t step             = 0;
     static float   bemf_previous    = 0.0f;
     static uint8_t crossed          = 0;
 
@@ -83,13 +85,15 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
     if (mode == ENCODER_MODE)
     {
     	// Calculate electrical angle
-        float electrical_angle = encoder.angle * BLDC_POLE_PAIRS;
+        float electrical_angle_raw = encoder.angle * BLDC_POLE_PAIRS;
         // Wrap electrical angle so its between 0 and 360 deg
-        while (electrical_angle >= 360.0f) electrical_angle -= 360.0f;
+        while (electrical_angle_raw >= 360.0f) electrical_angle_raw -= 360.0f;
         // Apply calculated offset on wrapped angle
-        electrical_angle -= electrical_offset;
+        electrical_angle_raw -= electrical_offset;
         // Wrap if after offset angle is negative
-        while (electrical_angle < 0.0f) electrical_angle += 360.0f;
+        while (electrical_angle_raw < 0.0f) electrical_angle_raw += 360.0f;
+        // Write final electrical angle value
+        electrical_angle = electrical_angle_raw;
         // Calculate step (1-6)
         step = (uint8_t)(electrical_angle / 60.0f) % 6;
     }

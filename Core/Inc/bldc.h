@@ -9,6 +9,9 @@
 #define ALIGN_DUTY_PERCENT  15   // Duty used to park rotor during alignment
 #define ALIGN_SETTLE_MS     2000  // Time to wait for rotor to settle
 
+extern uint8_t step;
+extern float electrical_angle;
+
 typedef enum
 {
     PHASE_U = 0,

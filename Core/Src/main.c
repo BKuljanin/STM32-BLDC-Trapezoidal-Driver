@@ -40,7 +40,7 @@ int main(void)
   back_emf_adc_init();
 
   // Test function for running BLDC by commutating and delaying
-  bldc_test_run((uint32_t)200, (uint32_t)10);
+  //bldc_test_run((uint32_t)200, (uint32_t)10);
 
   while (1)
   {
