@@ -12,9 +12,9 @@
 #define CCER_CC1E (1U<<0)
 #define CCER_CC2E (1U<<4)
 #define CCER_CC3E (1U<<8)
-#define OC_PWM1 ((1U<<6) | (1U<<5))
-#define OC_PWM2 ((1U<<14) | (1U<<13))
-#define OC_PWM3 ((1U<<6) | (1U<<5))
+#define OC_PWM1 ((1U<<6) | (1U<<5) | (1U<<4))
+#define OC_PWM2 ((1U<<14) | (1U<<13) | (1U<<12))
+#define OC_PWM3 ((1U<<6) | (1U<<5) | (1U<<4))
 #define CR1_CEN (1U<<0)
 #define CR1_CENTER_MODE1 (1U<<5)
 #define CCMR1_OC1PE (1U<<3)
@@ -138,7 +138,8 @@ void tim1_pwm_set_duty_percent(uint32_t duty, BLDC_Phase_t phase)
     }
 
     // Setting up count value as a percentage of ARR
-    uint32_t count_value = ((uint32_t)duty * TIM1->ARR) / 100; // First multiplication then division because of integer division
+    //uint32_t count_value = ((uint32_t)duty * TIM1->ARR) / 100; // Mode 1. First multiplication then division because of integer division
+    uint32_t count_value = TIM1->ARR - ((uint32_t)duty * TIM1->ARR) / 100; // Mode 2
 
     switch(phase)
     {
