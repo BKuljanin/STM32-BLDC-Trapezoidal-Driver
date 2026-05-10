@@ -42,7 +42,7 @@
 *.su
 *.idb
 *.pdb
-.launch
+*.launch
 
 # Kernel Module Compile Results
 *.mod*
