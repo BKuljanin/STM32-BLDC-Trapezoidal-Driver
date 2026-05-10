@@ -52,6 +52,12 @@ int main(void)
   // Initialize (park) BLDC motor
   bldc_init();
 
+  // Running BLDC in open loop mode to start reading nonzero back EMF
+  if (commutation_mode == BEMF_MODE)
+  {
+	  bldc_open_loop_run(OPEN_LOOP_DUTY);
+  }
+
   // Test function for running BLDC by commutating and delaying
   //bldc_test_run((uint32_t)200, (uint32_t)10);
 

@@ -149,3 +149,18 @@ void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle)
         HAL_Delay(delay_ms);
     }
 }
+
+// Drives BLDC in open loop to have back emf
+void bldc_open_loop_run(uint32_t duty_cycle)
+  {
+      uint32_t delay_ms = 20;  // Start slow
+
+      for (uint32_t i = 0; i < OPEN_LOOP_COM_NR; i++)
+      {
+          for (int s = 0; s < 6; s++) {
+              bldc_commutate(step_pwm[s], step_sink[s], step_float[s], duty_cycle);
+              HAL_Delay(delay_ms);
+          }
+          if (delay_ms > 3) delay_ms--;  // ramp up speed
+      }
+  }
