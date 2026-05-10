@@ -125,7 +125,7 @@ void bldc_init(void) {
       while (electrical_offset >= 360.0f) electrical_offset -= 360.0f;
   }
 
-// Drives BLDC like a stepper, cycling through 6 commutation steps with fixed delay
+// Drives BLDC like a stepper, cycling through 6 commutation steps with fixed delay. Only for testing
 void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle)
 {
     while(1)
