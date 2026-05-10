@@ -28,7 +28,7 @@
 
 int tim1_pwm_init(uint32_t f_pwm_hz, uint16_t resolution)
 {
-	// Initializing timer. Configuring PA8,9,10 pins as output capture in PWM mode
+	// Initializing timer. Configuring PA8,9,10 pins as output capture in PWM mode (UVW)
 
 	/* PA8,9,10 configuration */
 
