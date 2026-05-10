@@ -98,6 +98,10 @@ void back_emf_adc_init(void)
 	// Enable interrupt in NVIC
 	NVIC_EnableIRQ(ADC_IRQn);
 
+	// Configure PA0 as GPIO output for ISR timing debug
+	GPIOA->MODER |=  (1U << 0);
+	GPIOA->MODER &= ~(1U << 1);
+
 }
 
 float adc_to_volts(uint32_t adc_raw_value)
@@ -127,11 +131,12 @@ void back_emf_float_channel(BLDC_Phase_t floating_phase)
 }
 
 void ADC_IRQHandler(void)
-  {
-      if (ADC1->SR & (1U << 2))       // JEOC flag
-      {
-          back_emf_raw = ADC1->JDR1;  // Read result from injected data register
-          ADC1->SR &= ~(1U << 2);     // Clear JEOC flag
-          floating_phase_back_emf = adc_to_volts(back_emf_raw);
-      }
-  }
+{
+    GPIOA->ODR ^= (1U << 0);          // toggle PA0 for debugging
+    if (ADC1->SR & (1U << 2))         // JEOC flag
+    {
+        back_emf_raw = ADC1->JDR1;    // Read result from injected data register
+        ADC1->SR &= ~(1U << 2);       // Clear JEOC flag
+        floating_phase_back_emf = adc_to_volts(back_emf_raw);
+    }
+}
