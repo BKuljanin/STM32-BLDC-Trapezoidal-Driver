@@ -1,5 +1,7 @@
 #include "bldc.h"
 #include "pwm.h"
+#include "adc.h"
+#include "as5600.h"
 
 static void phase_enable(BLDC_Phase_t phase)
 {
@@ -47,6 +49,69 @@ static void bldc_commutate(BLDC_Phase_t pwm_phase, BLDC_Phase_t sink_phase, BLDC
     tim1_pwm_set_duty_percent(duty, pwm_phase);
     tim1_pwm_set_duty_percent(0,    sink_phase);
     tim1_pwm_set_duty_percent(0,    float_phase);
+}
+
+static const BLDC_Phase_t step_pwm[6]   = {PHASE_U, PHASE_U, PHASE_V, PHASE_V, PHASE_W, PHASE_W};
+static const BLDC_Phase_t step_sink[6]  = {PHASE_V, PHASE_W, PHASE_W, PHASE_U, PHASE_U, PHASE_V};
+static const BLDC_Phase_t step_float[6] = {PHASE_W, PHASE_V, PHASE_U, PHASE_W, PHASE_V, PHASE_U};
+
+void bldc_run(uint32_t duty, CommutationMode_t mode)
+{
+    static uint8_t initialized      = 0;
+    static float   electrical_offset = 0.0f;
+    static uint8_t step             = 0;
+    static float   bemf_previous    = 0.0f;
+    static uint8_t crossed          = 0;
+
+    if (!initialized)
+    {
+        bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
+        HAL_Delay(ALIGN_SETTLE_MS);
+        as5600_pwm_to_angle();
+        electrical_offset = encoder.angle * BLDC_POLE_PAIRS;
+        while (electrical_offset >= 360.0f) electrical_offset -= 360.0f;
+        initialized = 1;
+    }
+
+    bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty);
+    back_emf_float_channel(step_float[step]);
+
+    if (mode == ENCODER_MODE)
+    {
+        float electrical = encoder.angle * BLDC_POLE_PAIRS - electrical_offset;
+        while (electrical <    0.0f) electrical += 360.0f;
+        while (electrical >= 360.0f) electrical -= 360.0f;
+        step = (uint8_t)(electrical / 60.0f) % 6;
+    }
+    else if (mode == BEMF_MODE)
+    {
+        static uint8_t blank = 0;
+
+        if (blank > 0)
+        {
+            blank--;
+        }
+        else
+        {
+            float bemf = floating_phase_back_emf;
+
+            if ((bemf_previous < 0.0f && bemf >= 0.0f) ||
+                (bemf_previous >= 0.0f && bemf < 0.0f))
+            {
+                crossed = 1;
+            }
+
+            bemf_previous = bemf;
+        }
+
+        if (crossed)
+        {
+            // TODO: wait 30° electrical before advancing step
+            step    = (step + 1) % 6;
+            crossed = 0;
+            blank   = BEMF_BLANK_SAMPLES;
+        }
+    }
 }
 
 // Drives BLDC like a stepper, cycling through 6 commutation steps with fixed delay

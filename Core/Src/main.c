@@ -10,6 +10,8 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
+CommutationMode_t mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
+
 int main(void)
 {
 
