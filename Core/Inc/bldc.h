@@ -13,6 +13,11 @@ typedef enum
 
 } BLDC_Phase_t;
 
+typedef enum {
+      ENCODER_MODE,
+      BEMF_MODE
+  } CommutationMode_t;
+
 void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle);
 
 #endif /* INC_BLDC_H_ */
