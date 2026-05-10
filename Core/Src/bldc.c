@@ -2,6 +2,7 @@
 #include "pwm.h"
 #include "adc.h"
 #include "as5600.h"
+#include "timer.h"
 
 uint8_t step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
@@ -64,6 +65,7 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
     static float   bemf_previous    = 0.0f;
     static uint8_t crossed          = 0;
 
+    // Always called when bldc_run is called, will not do anything if step has not changed from last iteration
     bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty);
     back_emf_float_channel(step_float[step]);
 
@@ -125,14 +127,11 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 
         	if(crossing_time + half_time <= current_time)
 			{
-        		// Now commutate
-        		bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty);
-        		back_emf_float_channel(step_float[step]);
 
         		// Reading commutation time in us
         		commutation_time = read_time_us();
 
-        		// Calculating next step
+        		// Calculating next step, this will cause commutation (called in the beginning of this function)
                 step = (step + 1) % 6;
 
                 // Resetting crossed flag
