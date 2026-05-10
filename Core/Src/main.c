@@ -31,14 +31,14 @@ int main(void)
   // Initializing TIM1 PWM: 20 kHz, 8-bit resolution
   tim1_pwm_init(20000, 8);
 
-  // Test function for running BLDC by commutating and delaying
-  //bldc_test_run((uint32_t)200, (uint32_t)10);
-
   // Initializing tim1 ch4 to trigger ADC reading in the middle of PWM (center aligned) cycle
   tim1_trig_adc();
 
   // Initializing ADC measuring of back-emf voltage
   back_emf_adc_init();
+
+  // Test function for running BLDC by commutating and delaying
+  bldc_test_run((uint32_t)200, (uint32_t)10);
 
   while (1)
   {

@@ -8,6 +8,7 @@
 #include "bldc.h"
 
 extern volatile uint16_t back_emf_raw;
+extern volatile float floating_phase_back_emf;
 
 void back_emf_adc_init(void);
 float adc_to_volts(uint32_t adc_value);

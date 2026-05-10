@@ -1,5 +1,6 @@
 #include "stm32f4xx.h"
 #include "bldc.h"
+#include "adc.h"
 
 // ADC configuration
 #define GPIOBEN (1U<<1)
@@ -23,6 +24,7 @@
 #define CR2_ADCPRE (1U<<16)
 
 volatile uint16_t back_emf_raw;
+volatile float floating_phase_back_emf;
 
 void back_emf_adc_init(void)
 {
@@ -128,7 +130,8 @@ void ADC_IRQHandler(void)
   {
       if (ADC1->SR & (1U << 2))       // JEOC flag
       {
-          back_emf_raw = ADC1->JDR1;  // Read result
+          back_emf_raw = ADC1->JDR1;  // Read result from injected data register
           ADC1->SR &= ~(1U << 2);     // Clear JEOC flag
+          floating_phase_back_emf = adc_to_volts(back_emf_raw);
       }
   }
