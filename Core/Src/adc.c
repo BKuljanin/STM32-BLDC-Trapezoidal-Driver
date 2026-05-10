@@ -1,9 +1,12 @@
 #include "stm32f4xx.h"
+#include "bldc.h"
 
 // ADC configuration
 #define GPIOBEN (1U<<1)
 #define ADC1EN (1U<<8)
 #define ADC_CH13 (13U<<15)
+#define ADC_CH7 (7U<<15)
+#define ADC_CH8 (8U<<15)
 #define ADC_SEQ_LEN_1 0x00
 #define CR2_ADON (1U<<0)
 #define CR2_DMA (1U<<8)
@@ -19,7 +22,7 @@
 #define CR2_JEOCIE (1U<<7)
 #define CR2_ADCPRE (1U<<16)
 
-
+volatile uint16_t back_emf_raw;
 
 void back_emf_adc_init(void)
 {
@@ -43,7 +46,7 @@ void back_emf_adc_init(void)
 	GPIOA->MODER |= (1U<<15);
 
 	/* Configure ADC modules */
-	// Datasheet p46 PC3-ADC123_IN13, p47 PA7-ADC12_IN7, p48 PB0-ADC12_IN8
+	// Datasheet p46 PC3-ADC123_IN13, p48 PB0-ADC12_IN8, p47 PA7-ADC12_IN7
 	// Hence we are choosing ADC1 since all of these are connected to it. Channels 13,7,8
 
 	// Enable clock access to ADC
@@ -95,18 +98,37 @@ void back_emf_adc_init(void)
 
 }
 
-float adc_to_volts(uint32_t adc_value)
+float adc_to_volts(uint32_t adc_raw_value)
 {
 	float factor = (VREF / ADC_RES) * DIVIDER_RATIO; // Pre-calculate this constant
 	float phase_voltage = (float)adc_raw_value * factor;
 	return phase_voltage;
 }
 
+void back_emf_float_channel(BLDC_Phase_t floating_phase)
+{
+
+    switch(floating_phase)
+    {
+    case PHASE_U:
+    	ADC1->JSQR = ADC_CH13;	// Clearing content of register and writing channel of floating phase
+        break;
+    case PHASE_V:
+    	ADC1->JSQR = ADC_CH8;
+        break;
+    case PHASE_W:
+    	ADC1->JSQR = ADC_CH7;
+        break;
+    default:
+        break;
+    }
+}
+
 void ADC_IRQHandler(void)
   {
       if (ADC1->SR & (1U << 2))       // JEOC flag
       {
-          //back_emf_raw = ADC1->JDR1;  // read result
-          ADC1->SR &= ~(1U << 2);     // clear JEOC
+          back_emf_raw = ADC1->JDR1;  // Read result
+          ADC1->SR &= ~(1U << 2);     // Clear JEOC flag
       }
   }

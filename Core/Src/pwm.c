@@ -171,6 +171,6 @@ void tim1_trig_adc(void)
  	TIM1->CCMR2 |= CCMR1_OC4M_TOGGLE; // Reference manual p495 bits 12-14 OC2M (output compare for channel 2), TOGGLE mode selected (011). Once ARR is reached output is toggled
  	// Since CH2 output compare is in toggle mode (toggles on ARR), ADC is triggered on both rising and falling edge (see ADC config)
 
-	// Enabling TIM2 channel 2 in output mode
+	// Enabling TIM1 channel 4 in output mode
 	TIM1->CCER |= CCER_CC4E; // Reference manual p499 bit 4 CC2E
 }
