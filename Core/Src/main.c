@@ -7,12 +7,15 @@
 #include "gpio.h"
 #include "bldc.h"
 #include "pid.h"
+#include "setpoint_generator.h"
 
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
 float duty;
-float speed_setpoint = 50; // Speed setpoint [deg/s]
+float speed_setpoint = 1000; 					// Speed setpoint [deg/s]
+float speed_setpoint_ramp_gradient = 100; 		// Speed setpoint ramp gradient [deg/s^2]
+float speed_setpoint_ramp;
 
 CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
 
@@ -61,11 +64,15 @@ int main(void)
 		  as5600_pwm_to_angle();	// Collect measured angle
 		  as5600_calculate_speed();	// Calculate angular speed
 
+		  float dt = tim2_get_delta_us() / 1000000.0f;  //  Convert microseconds to seconds;
+
+		  speed_setpoint_ramp = ramp_speed_setpoint(speed_setpoint, speed_setpoint_ramp_gradient, dt);
+
 		  if (commutation_mode == ENCODER_MODE)
 		  {
 			  // Calculate duty cycle
-			  duty = pi_controller(speed_setpoint, encoder.angular_speed, PI_KP, PI_KI,
-			  				  PI_INTEGRAL_SAT, PI_OUTPUT_SAT_UPPER,  PI_OUTPUT_SAT_LOWER);
+			  duty = pi_controller(speed_setpoint_ramp, encoder.angular_speed, PI_KP, PI_KI,
+			  				  PI_INTEGRAL_SAT, PI_OUTPUT_SAT_UPPER,  PI_OUTPUT_SAT_LOWER, dt);
 
 			  /* Run BLDC motor in encoder mode.
 			  Commutation happens with encoder angle translated to electrical angle

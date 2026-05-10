@@ -10,6 +10,6 @@
 float pi_controller(float setpoint, float measurement,
 		float Kp, float Ki,
 		float integral_saturation,
-		float output_upper_saturation, float output_lower_saturation);
+		float output_upper_saturation, float output_lower_saturation, float dt);
 
 #endif /* INC_PID_H_ */
