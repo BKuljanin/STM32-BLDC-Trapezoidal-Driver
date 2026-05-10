@@ -1,8 +1,8 @@
 #ifndef INC_PID_H_
 #define INC_PID_H_
 
-#define PI_KP 0.02f
-#define PI_KI 0.002f
+#define PI_KP 0.1f
+#define PI_KI 0.01f
 #define PI_INTEGRAL_SAT 50.0f
 #define PI_OUTPUT_SAT_LOWER 0.0f
 #define PI_OUTPUT_SAT_UPPER 50.0f

@@ -13,16 +13,20 @@ float pi_controller(float setpoint, float measurement,
 
 	integral += error * dt;
 
-	if (integral > integral_saturation)
+	float i_term = integral * Ki;
+
+	if (i_term > integral_saturation)
 	{
-		integral = integral_saturation;
+		i_term = integral_saturation;
+		integral = integral_saturation/Ki;
 	}
-	if (integral < - integral_saturation)
+	if (i_term < - integral_saturation)
 	{
-		integral = - integral_saturation;
+		i_term = - integral_saturation;
+		integral = - integral_saturation/Ki;
 	}
 
-	float out = Kp * error + Ki * integral;
+	float out = Kp * error + i_term;
 
 	if (out > output_upper_saturation)
 	{

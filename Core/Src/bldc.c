@@ -5,6 +5,7 @@
 
 uint8_t step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
+static float   electrical_offset = 0.0f;
 
 static void phase_enable(BLDC_Phase_t phase)
 {
@@ -60,7 +61,6 @@ static const BLDC_Phase_t step_float[6] = {PHASE_W, PHASE_V, PHASE_U, PHASE_W, P
 
 void bldc_run(uint32_t duty, CommutationMode_t mode)
 {
-    static float   electrical_offset = 0.0f;
     static float   bemf_previous    = 0.0f;
     static uint8_t crossed          = 0;
 

@@ -11,6 +11,7 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
+float duty;
 float speed_setpoint = 50; // Speed setpoint [deg/s]
 
 CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
@@ -63,13 +64,13 @@ int main(void)
 		  if (commutation_mode == ENCODER_MODE)
 		  {
 			  // Calculate duty cycle
-			  float duty = pi_controller(speed_setpoint, encoder.angular_speed, PI_KP, PI_KI,
+			  duty = pi_controller(speed_setpoint, encoder.angular_speed, PI_KP, PI_KI,
 			  				  PI_INTEGRAL_SAT, PI_OUTPUT_SAT_UPPER,  PI_OUTPUT_SAT_LOWER);
 
 			  /* Run BLDC motor in encoder mode.
 			  Commutation happens with encoder angle translated to electrical angle
 			  Speed measurement is obtained from the encoder */
-			  bldc_run(duty, ENCODER_MODE);
+			  bldc_run((uint32_t)duty, ENCODER_MODE);
 		  }
 	  }
 
