@@ -5,6 +5,9 @@
 #define ADC_RES 4095.0f
 #define DIVIDER_RATIO 7.66f
 
+#define VBUS        12.0f
+#define VBUS_HALF   (VBUS / 2.0f)
+
 #include "bldc.h"
 
 extern volatile uint16_t back_emf_raw;

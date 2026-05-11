@@ -91,14 +91,14 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
         static uint32_t commutation_time = 0;
         static uint32_t half_time = 0;
 
+        float bemf = floating_phase_back_emf;	// Take latest back EMF reading from floating phase
+
         if (blank > 0)
         {
             blank--;	// Due to noise we can falsely detect several crossings around 0V
         }
         else if (!crossed)	// If no crossing has happened check if there is a crossing now
         {
-            float bemf = floating_phase_back_emf;	// Take latest back EMF reading from floating phase
-
             if ((bemf_previous < 0.0f && bemf >= 0.0f) ||	// Check if there is a crossing
                 (bemf_previous >= 0.0f && bemf < 0.0f))
             {
@@ -116,8 +116,10 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 
             }
 
-            bemf_previous = bemf;	// Saving back EMF value as previous
+
         }
+
+        bemf_previous = bemf;	// Saving back EMF value as previous
 
         if (crossed)
         {
@@ -191,7 +193,8 @@ void bldc_open_loop_run(uint32_t duty_cycle)
       for (uint32_t i = 0; i < OPEN_LOOP_COM_NR; i++)
       {
           for (int s = 0; s < 6; s++) {
-              bldc_commutate(step_pwm[s], step_sink[s], step_float[s], duty_cycle);
+              step = s;  // keep global step in sync so BEMF mode picks up from here
+              bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty_cycle);
               HAL_Delay(delay_ms);
           }
           if (delay_ms > 3) delay_ms--;  // ramp up speed

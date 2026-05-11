@@ -137,6 +137,6 @@ void ADC_IRQHandler(void)
     {
         back_emf_raw = ADC1->JDR1;    // Read result from injected data register
         ADC1->SR &= ~(1U << 2);       // Clear JEOC flag
-        floating_phase_back_emf = adc_to_volts(back_emf_raw);
+        floating_phase_back_emf = adc_to_volts(back_emf_raw) - VBUS_HALF;
     }
 }

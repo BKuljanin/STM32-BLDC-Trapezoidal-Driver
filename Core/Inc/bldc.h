@@ -11,7 +11,7 @@
 #define ALIGN_SETTLE_MS     2000  	// Time to wait for rotor to settle
 
 #define OPEN_LOOP_COM_NR	200		// Number of commutations in open loop
-#define OPEN_LOOP_DUTY		5		// Duty cycle of open loop phase
+#define OPEN_LOOP_DUTY		10		// Duty cycle of open loop phase
 
 extern uint8_t step;
 extern float electrical_angle;
