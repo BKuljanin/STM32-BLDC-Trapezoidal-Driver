@@ -52,6 +52,8 @@ int main(void)
   // Initialize (park) BLDC motor
   bldc_init();
 
+  test_adc_ch_switch();
+
   // Running BLDC in open loop mode to start reading nonzero back EMF
   if (commutation_mode == BEMF_MODE)
   {

@@ -25,6 +25,9 @@
 
 volatile uint16_t back_emf_raw;
 volatile float floating_phase_back_emf;
+volatile uint16_t counter;
+volatile float back_emf_plot;
+volatile uint16_t raw_plot;
 
 void back_emf_adc_init(void)
 {
@@ -99,8 +102,8 @@ void back_emf_adc_init(void)
 	NVIC_EnableIRQ(ADC_IRQn);
 
 	// Configure PA0 as GPIO output for ISR timing debug
-	GPIOA->MODER |=  (1U << 0);
-	GPIOA->MODER &= ~(1U << 1);
+	//GPIOA->MODER |=  (1U << 0);
+	//GPIOA->MODER &= ~(1U << 1);
 
 }
 
@@ -138,5 +141,12 @@ void ADC_IRQHandler(void)
         back_emf_raw = ADC1->JDR1;    // Read result from injected data register
         ADC1->SR &= ~(1U << 2);       // Clear JEOC flag
         floating_phase_back_emf = adc_to_volts(back_emf_raw) - VBUS_HALF;
+        counter++;
+        if (counter >= 20)
+        {
+        	back_emf_plot = floating_phase_back_emf;
+        	raw_plot = back_emf_raw;
+        	counter = 0;
+        }
     }
 }

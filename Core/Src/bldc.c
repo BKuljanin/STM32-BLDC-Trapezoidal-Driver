@@ -7,6 +7,7 @@
 uint8_t step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
 static float   electrical_offset = 0.0f;
+uint32_t commutation_done;
 
 static void phase_enable(BLDC_Phase_t phase)
 {
@@ -195,8 +196,27 @@ void bldc_open_loop_run(uint32_t duty_cycle)
           for (int s = 0; s < 6; s++) {
               step = s;  // keep global step in sync so BEMF mode picks up from here
               bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty_cycle);
+              back_emf_float_channel(step_float[step]);
+              commutation_done = 1;
               HAL_Delay(delay_ms);
+              commutation_done = 0;
           }
-          if (delay_ms > 3) delay_ms--;  // ramp up speed
+          if (delay_ms > 2) delay_ms--;  // ramp up speed
       }
   }
+
+void test_adc_ch_switch(void)
+{
+	uint32_t delay_switch = 5000;
+	uint8_t step = 0;
+	while(1) {
+
+	            // keep global step in sync so BEMF mode picks up from here
+	          bldc_commutate(step_pwm[step], step_sink[step], step_float[step], 20);
+	          back_emf_float_channel(step_float[step]);
+	          commutation_done = 1;
+	          HAL_Delay(delay_switch);
+	          commutation_done = 0;
+	          step = (step + 1) % 6;
+	          }
+}

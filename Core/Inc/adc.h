@@ -3,7 +3,7 @@
 
 #define VREF 3.3f
 #define ADC_RES 4095.0f
-#define DIVIDER_RATIO 7.66f
+#define DIVIDER_RATIO ((10.0f + 2.2f) / 2.2f) // IHM07 reference manual p17
 
 #define VBUS        12.0f
 #define VBUS_HALF   (VBUS / 2.0f)
@@ -12,6 +12,8 @@
 
 extern volatile uint16_t back_emf_raw;
 extern volatile float floating_phase_back_emf;
+extern volatile float back_emf_plot;
+extern volatile uint16_t raw_plot;
 
 void back_emf_adc_init(void);
 float adc_to_volts(uint32_t adc_value);
