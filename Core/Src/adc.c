@@ -67,11 +67,11 @@ void back_emf_adc_init(void)
 	// For now this is just initialization, will be changed as floating phases change.
 	// IN INJECTING ADC STARTS FROM JSQ4
 
-	// Configure Sampling Time for Channel 1 (Bits 3,4,5 in SMPR2). Required especially for high impedance input
-	/*ADC1->SMPR2 &= ~ (1U << 5);
-	ADC1->SMPR2 &= ~ (1U << 4);
-	ADC1->SMPR2 &= ~ (1U << 3);*/
-	// As per reference manual p385, 000 on bits 3,4,5 of SMPR2 define sampling time of 3 cycles (time it takes for internal capacitor to charge)
+	// Sampling time = 480 cycles for CH7, CH8, CH13 (SMPR2 p385, SMPR1 p384)
+	// 111b = 480 cycles; allows ringing on floating phase to settle before sample is taken
+	ADC1->SMPR2 |= (7U << 21);  // CH7  bits [23:21]
+	ADC1->SMPR2 |= (7U << 24);  // CH8  bits [26:24]
+	ADC1->SMPR1 |= (7U << 9);   // CH13 bits [11:9]
 
 	/* Setting up ADC triggering from TIM1 CH4 (in the middle of the pulse - CNT=ARR) */
 
