@@ -67,11 +67,11 @@ void back_emf_adc_init(void)
 	// For now this is just initialization, will be changed as floating phases change.
 	// IN INJECTING ADC STARTS FROM JSQ4
 
-	// Sampling time = 480 cycles for CH7, CH8, CH13 (SMPR2 p385, SMPR1 p384)
-	// 111b = 480 cycles; allows ringing on floating phase to settle before sample is taken
-	ADC1->SMPR2 |= (7U << 21);  // CH7  bits [23:21]
-	ADC1->SMPR2 |= (7U << 24);  // CH8  bits [26:24]
-	ADC1->SMPR1 |= (7U << 9);   // CH13 bits [11:9]
+	// Sampling time = 28 cycles (010b) for CH7, CH8, CH13 — stays within the PWM ON window
+	// Phase U is HIGH for ~2.25us each side of trigger; 28 cycles = 2.24us at 12.5MHz ADC clock
+	ADC1->SMPR2 |= (2U << 21);  // CH7  bits [23:21]
+	ADC1->SMPR2 |= (2U << 24);  // CH8  bits [26:24]
+	ADC1->SMPR1 |= (2U << 9);   // CH13 bits [11:9]
 
 	/* Setting up ADC triggering from TIM1 CH4 (in the middle of the pulse - CNT=ARR) */
 
