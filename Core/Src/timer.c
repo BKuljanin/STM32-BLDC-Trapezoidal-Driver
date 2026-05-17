@@ -1,8 +1,8 @@
 #include "stm32f4xx.h"
 #include "timer.h"
 
-#define GPIOAEN (1U<<0)
-#define AFR6_TIM (1U<<25)
+#define GPIOCEN (1U<<2)
+#define AFR6_TIM (2U<<24)  // PC6, AF02, bits 27:24
 #define TIM3EN (1U<<1)
 #define TIM2EN (1U<<0)
 #define CCMR1_IN_CC1S (1U<<0)
@@ -19,17 +19,18 @@ volatile uint32_t pulse_period;
 volatile uint32_t rising_previous;
 
 // Initializing timer for capturing encoder measurements
-void tim3_pa6_1mhz_init(void)
+void tim3_pc6_1mhz_init(void)
 {
 
-	// Enable clock access to GPIOA
-	RCC->AHB1ENR |= GPIOAEN; // Datasheet p16 GPIOA is connected to AHB1
+	// Enable clock access to GPIOC
+	RCC->AHB1ENR |= GPIOCEN;
 
-	GPIOA->MODER &=~ (1U<<12); // Reference manual p186 10-alternate function
-	GPIOA->MODER |= (1U<<13);
+	// Set PC6 to alternate function mode (10), bits 13:12
+	GPIOC->MODER &=~ (1U<<12);
+	GPIOC->MODER |=  (1U<<13);
 
-	// Set PA6 alternate function as timer 3 channel 1
-	GPIOA->AFR[0] |= AFR6_TIM; // Reference manual p190 low AFRL (low register since its PA6), AF02. Set bit 25 to 1
+	// Set PC6 alternate function as TIM3 CH1 (AF02), bits 27:24 of AFRL
+	GPIOC->AFR[0] |= AFR6_TIM;
 
 	// Enable clock access to tim3
 	RCC->APB1ENR |= TIM3EN; // Reference manual p146 tim3 bit 1

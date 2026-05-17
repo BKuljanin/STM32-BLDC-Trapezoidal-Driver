@@ -17,7 +17,7 @@ float speed_setpoint = 1000; 					// Speed setpoint [deg/s]
 float speed_setpoint_ramp_gradient = 100; 		// Speed setpoint ramp gradient [deg/s^2]
 float speed_setpoint_ramp;
 
-CommutationMode_t commutation_mode = BEMF_MODE; // User can here input ENCODER_MODE or BEMF_MODE
+CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
 
 int main(void)
 {
@@ -32,7 +32,7 @@ int main(void)
   as5600_init();
 
   // Initializing timer 3 to capture pulse width
-  tim3_pa6_1mhz_init();
+  tim3_pc6_1mhz_init();
 
   // Initializing EN pins for U,V,W PWM commands
   en_uvw_init();

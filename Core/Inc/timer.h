@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-void tim3_pa6_1mhz_init(void);
+void tim3_pc6_1mhz_init(void);
 #define SR_CC1IF (1U<<1)
 
 extern volatile uint8_t measurement_ready;
