@@ -68,7 +68,16 @@ void bldc_update_step(void)
     ea -= electrical_offset;
     while (ea < 0.0f) ea += 360.0f;
     electrical_angle = ea;
-    step = (uint8_t)(ea / 60.0f) % 6;
+
+    uint8_t new_step = (uint8_t)(ea / 60.0f) % 6;
+    if (new_step != step) {
+        float lower = (float)new_step * 60.0f;
+        float depth_lo = ea - lower;
+        float depth_hi = lower + 60.0f - ea;
+        float depth = depth_lo < depth_hi ? depth_lo : depth_hi;
+        if (depth >= STEP_HYSTERESIS_DEG)
+            step = new_step;
+    }
 }
 
 void bldc_run(uint32_t duty, CommutationMode_t mode)
