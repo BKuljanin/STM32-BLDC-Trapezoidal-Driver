@@ -61,6 +61,16 @@ static const BLDC_Phase_t step_pwm[6]   = {PHASE_U, PHASE_U, PHASE_V, PHASE_V, P
 static const BLDC_Phase_t step_sink[6]  = {PHASE_V, PHASE_W, PHASE_W, PHASE_U, PHASE_U, PHASE_V};
 static const BLDC_Phase_t step_float[6] = {PHASE_W, PHASE_V, PHASE_U, PHASE_W, PHASE_V, PHASE_U};
 
+void bldc_update_step(void)
+{
+    float ea = encoder.angle * BLDC_POLE_PAIRS;
+    while (ea >= 360.0f) ea -= 360.0f;
+    ea -= electrical_offset;
+    while (ea < 0.0f) ea += 360.0f;
+    electrical_angle = ea;
+    step = (uint8_t)(ea / 60.0f) % 6;
+}
+
 void bldc_run(uint32_t duty, CommutationMode_t mode)
 {
     static float   bemf_previous    = 0.0f;
@@ -70,22 +80,7 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
     bldc_commutate(step_pwm[step], step_sink[step], step_float[step], duty);
     back_emf_float_channel(step_float[step]);
 
-    if (mode == ENCODER_MODE)
-    {
-    	// Calculate electrical angle
-        float electrical_angle_raw = encoder.angle * BLDC_POLE_PAIRS;
-        // Wrap electrical angle so its between 0 and 360 deg
-        while (electrical_angle_raw >= 360.0f) electrical_angle_raw -= 360.0f;
-        // Apply calculated offset on wrapped angle
-        electrical_angle_raw -= electrical_offset;
-        // Wrap if after offset angle is negative
-        while (electrical_angle_raw < 0.0f) electrical_angle_raw += 360.0f;
-        // Write final electrical angle value
-        electrical_angle = electrical_angle_raw;
-        // Calculate step (1-6)
-        step = (uint8_t)(electrical_angle / 60.0f) % 6;
-    }
-    else if (mode == BEMF_MODE)
+    if (mode == BEMF_MODE)
     {
         static uint8_t blank = BEMF_BLANK_SAMPLES;	// See below for description of blank
         static uint32_t crossing_time = 0;

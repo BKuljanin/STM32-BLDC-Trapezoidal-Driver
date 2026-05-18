@@ -1,5 +1,6 @@
 #include "as5600.h"
 #include "i2c.h"
+#include "bldc.h"
 
 as5600 encoder;
 volatile uint8_t measurement_ready;
@@ -45,6 +46,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
         angle_filter_state = angle;
         encoder.angle_previous = angle;
         encoder.angle = angle;
+        bldc_update_step();
         measurement_ready = 1;
         return;
     }
@@ -63,6 +65,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
     if (filtered < 0.0f) filtered += 360.0f;
 
     encoder.angle = filtered;
+    bldc_update_step();
     measurement_ready = 1;
 }
 

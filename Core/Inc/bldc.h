@@ -29,6 +29,7 @@ typedef enum {
       BEMF_MODE
 } CommutationMode_t;
 
+void bldc_update_step(void);
 void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle);
 void bldc_run(uint32_t duty, CommutationMode_t mode);
 void bldc_init(void);
