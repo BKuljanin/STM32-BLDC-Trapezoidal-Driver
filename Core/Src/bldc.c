@@ -7,6 +7,7 @@
 uint8_t step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
 uint32_t commutation_done;
+BLDC_Direction_t bldc_direction = BLDC_REVERSE;
 
 static void phase_enable(BLDC_Phase_t phase)
 {

@@ -47,6 +47,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
         angle_filter_state = angle;
         float ref = angle - angle_offset;
         if (ref < 0.0f) ref += 360.0f;
+        if (bldc_direction == BLDC_REVERSE) { ref = 360.0f - ref; if (ref >= 360.0f) ref -= 360.0f; }
         encoder.angle_previous = ref;
         encoder.angle = ref;
         bldc_update_step();
@@ -69,6 +70,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 
     float ref = filtered - angle_offset;
     if (ref < 0.0f) ref += 360.0f;
+    if (bldc_direction == BLDC_REVERSE) { ref = 360.0f - ref; if (ref >= 360.0f) ref -= 360.0f; }
     encoder.angle = ref;
     bldc_update_step();
     measurement_ready = 1;
@@ -76,7 +78,9 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 
 void as5600_set_reference(void)
 {
-    angle_offset += encoder.angle;
+    float unflipped = (bldc_direction == BLDC_REVERSE) ? 360.0f - encoder.angle : encoder.angle;
+    if (unflipped >= 360.0f) unflipped -= 360.0f;
+    angle_offset += unflipped;
     if (angle_offset >= 360.0f) angle_offset -= 360.0f;
     encoder.angle = 0.0f;
     encoder.angle_previous = 0.0f;

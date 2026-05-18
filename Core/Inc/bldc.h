@@ -31,6 +31,13 @@ typedef enum {
       BEMF_MODE
 } CommutationMode_t;
 
+typedef enum {
+    BLDC_FORWARD = 0,
+    BLDC_REVERSE = 1
+} BLDC_Direction_t;
+
+extern BLDC_Direction_t bldc_direction;
+
 void bldc_update_step(void);
 void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle);
 void bldc_run(uint32_t duty, CommutationMode_t mode);
