@@ -6,7 +6,6 @@
 
 uint8_t step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
-static float   electrical_offset = 0.0f;
 uint32_t commutation_done;
 
 static void phase_enable(BLDC_Phase_t phase)
@@ -65,8 +64,6 @@ void bldc_update_step(void)
 {
     float ea = encoder.angle * BLDC_POLE_PAIRS;
     while (ea >= 360.0f) ea -= 360.0f;
-    ea -= electrical_offset;
-    while (ea < 0.0f) ea += 360.0f;
     electrical_angle = ea;
 
     uint8_t new_step = (uint8_t)(ea / 60.0f) % 6;
@@ -158,12 +155,9 @@ void bldc_init(void) {
       bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
       HAL_Delay(ALIGN_SETTLE_MS);
       measurement_ready = 0;
-      while (!measurement_ready);  // Wait for fresh I2C angle reading
-      electrical_offset = encoder.angle * BLDC_POLE_PAIRS;
-
-      /* If electrical angle is above 360 degrees (which it most likely is since elec_angle = mech_angle * BLDC_POLE_PAIRS
-      * We find electrical offset by reducing by full circle in order to get electrical offset between 0 and 360 deg */
-      while (electrical_offset >= 360.0f) electrical_offset -= 360.0f;
+      while (!measurement_ready);
+      as5600_set_reference();
+      step = 0;
   }
 
 // Drives BLDC like a stepper, cycling through 6 commutation steps with fixed delay. Only for testing

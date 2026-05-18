@@ -6,6 +6,7 @@ as5600 encoder;
 volatile uint8_t measurement_ready;
 
 static uint8_t i2c_rx_buf[2];
+static float   angle_offset = 0.0f;
 
 static float lp_filter(float signal, float LP_cutoff, float delta_t, float *state)
 {
@@ -44,8 +45,10 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
         prev_raw_angle = angle;
         unwrapped = angle;
         angle_filter_state = angle;
-        encoder.angle_previous = angle;
-        encoder.angle = angle;
+        float ref = angle - angle_offset;
+        if (ref < 0.0f) ref += 360.0f;
+        encoder.angle_previous = ref;
+        encoder.angle = ref;
         bldc_update_step();
         measurement_ready = 1;
         return;
@@ -64,9 +67,19 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
     filtered = filtered - 360.0f * (int)(filtered / 360.0f);
     if (filtered < 0.0f) filtered += 360.0f;
 
-    encoder.angle = filtered;
+    float ref = filtered - angle_offset;
+    if (ref < 0.0f) ref += 360.0f;
+    encoder.angle = ref;
     bldc_update_step();
     measurement_ready = 1;
+}
+
+void as5600_set_reference(void)
+{
+    angle_offset += encoder.angle;
+    if (angle_offset >= 360.0f) angle_offset -= 360.0f;
+    encoder.angle = 0.0f;
+    encoder.angle_previous = 0.0f;
 }
 
 void as5600_calculate_speed(void)

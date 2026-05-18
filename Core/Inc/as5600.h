@@ -22,5 +22,6 @@ extern volatile uint8_t measurement_ready;
 
 void as5600_trigger_read(void);
 void as5600_calculate_speed(void);
+void as5600_set_reference(void);
 
 #endif /* INC_AS5600_H_ */
