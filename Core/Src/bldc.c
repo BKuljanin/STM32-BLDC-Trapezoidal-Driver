@@ -153,7 +153,8 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 void bldc_init(void) {
       bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
       HAL_Delay(ALIGN_SETTLE_MS);
-      as5600_pwm_to_angle();
+      measurement_ready = 0;
+      while (!measurement_ready);  // Wait for fresh I2C angle reading
       electrical_offset = encoder.angle * BLDC_POLE_PAIRS;
 
       /* If electrical angle is above 360 degrees (which it most likely is since elec_angle = mech_angle * BLDC_POLE_PAIRS

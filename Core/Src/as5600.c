@@ -1,93 +1,86 @@
 #include "as5600.h"
+#include "i2c.h"
 
 as5600 encoder;
+volatile uint8_t measurement_ready;
+
+static uint8_t i2c_rx_buf[2];
 
 static float lp_filter(float signal, float LP_cutoff, float delta_t, float *state)
 {
-	float alpha = 2 * PI * delta_t * LP_cutoff / (1 + 2 * PI * delta_t * LP_cutoff);
-
-	*state = alpha * signal + (1-alpha) * (*state);
-
-	return *state;
+    float alpha = 2 * PI * delta_t * LP_cutoff / (1 + 2 * PI * delta_t * LP_cutoff);
+    *state = alpha * signal + (1 - alpha) * (*state);
+    return *state;
 }
 
-void as5600_pwm_to_angle(void)
+// Called from TIM3 ISR at 1 kHz — starts non-blocking I2C read
+void as5600_trigger_read(void)
 {
-	encoder.angle_previous = encoder.angle;
+    if (HAL_I2C_GetState(&hi2c1) == HAL_I2C_STATE_READY) {
+        HAL_I2C_Mem_Read_IT(&hi2c1, AS5600_ADDRESS << 1, AS5600_RAW_ANGLE_REG,
+                            I2C_MEMADD_SIZE_8BIT, i2c_rx_buf, 2);
+    }
+}
 
-	// Snapshot both together so an interrupt cant update one without the other
-	__disable_irq();
-	uint32_t width = pulse_width;
-	uint32_t period = pulse_period;
-	__enable_irq();
+// Called by HAL when I2C read completes
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+    if (hi2c->Instance != I2C1) return;
 
-	if (period < 900) period = 900;
+    encoder.angle_previous = encoder.angle;
 
-	// Remove the 128 tick bias so 0 degrees maps to 0 and 360 maps to 360
-	// AS5600 PWM cycle: [128 always LOW][4095 angle][128 always HIGH] = 4351 total
-	// Even at 0 degrees the duty cycle is ~3%, never fully LOW.
-	// Even at 360 degrees the duty cycle is ~97%, never fully HIGH.
-	// This way we can always tell the sensor is alive and outputting.
-	float duty = (float)width / (float)period;
-	float raw = duty * AS5600_DCL_TOTAL - AS5600_DCL_PADDING;
+    // Raw 12-bit angle: reg 0x0C[3:0] = bits 11:8, reg 0x0D = bits 7:0
+    uint16_t raw = ((uint16_t)(i2c_rx_buf[0] & 0x0F) << 8) | i2c_rx_buf[1];
+    float angle = (float)raw * 360.0f / 4096.0f;
 
-	if (raw < 0.0f) raw = 0.0f;
-	if (raw > AS5600_DCL_ANGLE) raw = AS5600_DCL_ANGLE;
+    static float prev_raw_angle;
+    static float unwrapped;
+    static float angle_filter_state;
+    static uint8_t first = 1;
 
-	float angle = (raw / AS5600_DCL_ANGLE) * 360.0f;
+    if (first) {
+        first = 0;
+        prev_raw_angle = angle;
+        unwrapped = angle;
+        angle_filter_state = angle;
+        encoder.angle_previous = angle;
+        encoder.angle = angle;
+        measurement_ready = 1;
+        return;
+    }
 
-	static float prev_raw_angle;
-	static float unwrapped;
-	static float angle_filter_state;
-	static uint8_t first = 1;
+    // Unwrap to continuous so the LP filter doesn't see 360-0 jumps
+    float delta = angle - prev_raw_angle;
+    if (delta >  180.0f) delta -= 360.0f;
+    if (delta < -180.0f) delta += 360.0f;
+    prev_raw_angle = angle;
+    unwrapped += delta;
 
-	if (first) {
-		first = 0;
-		prev_raw_angle = angle;
-		unwrapped = angle;
-		angle_filter_state = angle;
-		encoder.angle_previous = angle;
-		encoder.angle = angle;
-		return;
-	}
+    float filtered = lp_filter(unwrapped, ANGLE_LP_CUTOFF, AS5600_SAMPLE_PERIOD_S, &angle_filter_state);
 
-	// Unwrap angle to continuous values so the filter doesnt see 360 to 0 jumps
-	float delta = angle - prev_raw_angle;
-	if (delta > 180.0f) delta -= 360.0f;
-	if (delta < -180.0f) delta += 360.0f;
-	prev_raw_angle = angle;
-	unwrapped += delta;
+    // Wrap back to 0-360
+    filtered = filtered - 360.0f * (int)(filtered / 360.0f);
+    if (filtered < 0.0f) filtered += 360.0f;
 
-	// Filter the continuous angle
-	float filtered = lp_filter(unwrapped, ANGLE_LP_CUTOFF, (float)period / 1e6f, &angle_filter_state);
-
-	// Wrap back to 0-360
-	filtered = filtered - 360.0f * (int)(filtered / 360.0f);
-	if (filtered < 0.0f) filtered += 360.0f;
-
-	encoder.angle = filtered;
+    encoder.angle = filtered;
+    measurement_ready = 1;
 }
 
 void as5600_calculate_speed(void)
 {
-	// Let angle settle before computing speed
-	static uint8_t skip = 50;
-	if (skip > 0) {
-		skip--;
-		return;
-	}
+    static uint8_t skip = 50;
+    if (skip > 0) {
+        skip--;
+        return;
+    }
 
-	uint32_t period = pulse_period;
-	if (period < 900) period = 900;
+    float delta_angle = encoder.angle - encoder.angle_previous;
+    if (delta_angle >  180.0f) delta_angle -= 360.0f;
+    if (delta_angle < -180.0f) delta_angle += 360.0f;
 
-	// Wrap aware delta, if prev ~360 and current ~0 (or vice versa) compute actual small movement
-	float delta_angle = encoder.angle - encoder.angle_previous;
-	if (delta_angle > 180.0f) delta_angle -= 360.0f;
-	if (delta_angle < -180.0f) delta_angle += 360.0f;
+    float angular_speed_raw = delta_angle / AS5600_SAMPLE_PERIOD_S;
 
-	float angular_speed_raw = delta_angle / ((float)period / 1e6f);	// Converting pulse width from us to s to get [deg/s]
-
-	// Second stage filter on speed
-	static float speed_filter_state;
-	encoder.angular_speed = lp_filter(angular_speed_raw, SPEED_LP_CUTOFF, (float)period / 1e6f, &speed_filter_state);
+    static float speed_filter_state;
+    encoder.angular_speed = lp_filter(angular_speed_raw, SPEED_LP_CUTOFF,
+                                      AS5600_SAMPLE_PERIOD_S, &speed_filter_state);
 }

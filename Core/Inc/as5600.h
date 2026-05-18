@@ -9,19 +9,7 @@
 #define ANGLE_LP_CUTOFF 30  // [Hz]
 #define SPEED_LP_CUTOFF 20  // [Hz]
 
-// AS5600 PWM cycle: [128 always LOW][4095 angle][128 always HIGH] = 4351 total
-// Even at 0 degrees the duty cycle is ~3%, never fully LOW.
-// Even at 360 degrees the duty cycle is ~97%, never fully HIGH.
-// This way we can always tell the sensor is alive and outputting.
-#define AS5600_DCL_TOTAL   4351.0f
-#define AS5600_DCL_PADDING 128.0f
-#define AS5600_DCL_ANGLE   4095.0f
-
-extern volatile uint32_t pulse_width;
-extern volatile uint32_t pulse_period;
-
-void as5600_pwm_to_angle(void);
-void as5600_calculate_speed(void);
+#define AS5600_SAMPLE_PERIOD_S 0.001f  // 1 kHz TIM3 trigger rate
 
 typedef struct {
     float angle;
@@ -30,5 +18,9 @@ typedef struct {
 } as5600;
 
 extern as5600 encoder;
+extern volatile uint8_t measurement_ready;
+
+void as5600_trigger_read(void);
+void as5600_calculate_speed(void);
 
 #endif /* INC_AS5600_H_ */

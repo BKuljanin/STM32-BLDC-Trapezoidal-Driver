@@ -31,9 +31,6 @@ int main(void)
   // Initializing AS5600 encoder via I2C
   as5600_init();
 
-  // Initializing timer 3 to capture pulse width
-  tim3_pc6_1mhz_init();
-
   // Initializing EN pins for U,V,W PWM commands
   en_uvw_init();
 
@@ -48,6 +45,9 @@ int main(void)
 
   // Initializing TIM2 to measure time and schedule commutation in back EMF mode
   tim2_1mhz_init();
+
+  // Initializing TIM3 to trigger AS5600 I2C reads at 1 kHz
+  tim3_1khz_it_init();
 
   // Initialize (park) BLDC motor
   bldc_init();
@@ -69,8 +69,7 @@ int main(void)
 	  if (measurement_ready == 1)
 	  {
 		  measurement_ready = 0;
-		  as5600_pwm_to_angle();	// Collect measured angle
-		  as5600_calculate_speed();	// Calculate angular speed
+		  as5600_calculate_speed();
 
 		  float dt = tim2_get_delta_us() / 1000000.0f;  //  Convert microseconds to seconds;
 
