@@ -13,7 +13,7 @@
 #define OPEN_LOOP_COM_NR	300		// Number of commutations in open loop
 #define OPEN_LOOP_DUTY		10		// Duty cycle of open loop phase
 
-#define STEP_HYSTERESIS_DEG  5.0f	// Must be > angle noise amplitude (deg electrical)
+#define STEP_HYSTERESIS_DEG  1.0f
 
 extern uint8_t step;
 extern float electrical_angle;
