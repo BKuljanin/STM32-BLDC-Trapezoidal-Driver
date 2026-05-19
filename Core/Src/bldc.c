@@ -4,7 +4,7 @@
 #include "as5600.h"
 #include "timer.h"
 
-uint8_t step = 0;  // current commutation step (exposed for debugging)
+uint8_t volatile step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
 uint32_t commutation_done;
 BLDC_Direction_t bldc_direction = BLDC_REVERSE;

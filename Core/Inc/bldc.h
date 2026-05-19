@@ -15,7 +15,7 @@
 
 #define STEP_HYSTERESIS_DEG  1.0f
 
-extern uint8_t step;
+extern volatile uint8_t step;
 extern float electrical_angle;
 extern uint32_t commutation_done;
 
