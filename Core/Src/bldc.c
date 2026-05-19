@@ -73,7 +73,7 @@ void bldc_update_step(void)
     if (new_step != step) {
         float lower = (float)sector * 60.0f;
         float depth_lo = ea - lower;
-        if (depth_lo >= STEP_HYSTERESIS_DEG)
+        if (depth_lo >= STEP_HYSTERESIS_DEG)	// Prevents oscillations between 2 phases due to encoder noise
             step = new_step;
     }
 }

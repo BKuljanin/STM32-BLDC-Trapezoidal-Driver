@@ -77,7 +77,7 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 }
 
 void as5600_set_reference(void)
-{
+{	// Calculates offset from 0 so on motor initialization angle is 0 degrees
     float unflipped = (bldc_direction == BLDC_REVERSE) ? 360.0f - encoder.angle : encoder.angle;
     if (unflipped >= 360.0f) unflipped -= 360.0f;
     angle_offset += unflipped;
