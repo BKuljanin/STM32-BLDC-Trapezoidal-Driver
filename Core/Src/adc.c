@@ -135,7 +135,7 @@ void back_emf_float_channel(BLDC_Phase_t floating_phase)
 
 void ADC_IRQHandler(void)
 {
-    GPIOA->ODR ^= (1U << 0);          // toggle PA0 for debugging
+    //GPIOA->ODR ^= (1U << 0);          // toggle PA0 for debugging
     if (ADC1->SR & (1U << 2))         // JEOC flag
     {
         back_emf_raw = ADC1->JDR1;    // Read result from injected data register
