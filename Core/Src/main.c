@@ -63,7 +63,7 @@ int main(void)
   }
 
   // Test function for running BLDC by commutating and delaying
-  //bldc_test_run((uint32_t)200, (uint32_t)50);
+  bldc_test_run((uint32_t)200, (uint32_t)50);
 
   while (1)
   {

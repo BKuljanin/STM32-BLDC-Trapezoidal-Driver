@@ -101,9 +101,9 @@ void back_emf_adc_init(void)
 	// Enable interrupt in NVIC
 	NVIC_EnableIRQ(ADC_IRQn);
 
-	// Configure PA2 as GPIO output for ADC sample timing debug
-	GPIOA->MODER |=  (1U << 4);   // bits [5:4] = 01 → output
-	GPIOA->MODER &= ~(1U << 5);
+	// Configure PB15 as GPIO output for ADC sample timing debug
+	GPIOB->MODER |=  (1U << 30);  // bits [31:30] = 01 → output
+	GPIOB->MODER &= ~(1U << 31);
 
 }
 
@@ -137,12 +137,12 @@ void ADC_IRQHandler(void)
 {
     if (ADC1->SR & (1U << 2))         // JEOC flag
     {
-        GPIOA->ODR ^= (1U << 2);      // toggle PA2 — probe here to verify sample timing
+        GPIOB->ODR ^= (1U << 15);     // toggle PB15 — probe here to verify sample timing
         back_emf_raw = ADC1->JDR1;    // Read result from injected data register
         ADC1->SR &= ~(1U << 2);       // Clear JEOC flag
         floating_phase_back_emf = adc_to_volts(back_emf_raw) - VBUS_HALF;
         counter++;
-        if (counter >= 20)
+        if (counter >= 3)
         {
         	back_emf_plot = floating_phase_back_emf;
         	raw_plot = back_emf_raw;
