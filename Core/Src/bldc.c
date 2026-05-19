@@ -89,16 +89,16 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 
     if (mode == BEMF_MODE)
     {
-        static uint8_t blank = BEMF_BLANK_SAMPLES;	// See below for description of blank
+        static uint32_t blank_until = 0;
         static uint32_t crossing_time = 0;
         static uint32_t commutation_time = 0;
         static uint32_t half_time = 0;
 
         float bemf = floating_phase_back_emf;	// Take latest back EMF reading from floating phase
 
-        if (blank > 0)
+        if (read_time_us() < blank_until)
         {
-            blank--;	// Due to noise we can falsely detect several crossings around 0V
+            // blanking period after commutation - ignore BEMF
         }
         else if (!crossed)	// If no crossing has happened check if there is a crossing now
         {
@@ -143,7 +143,7 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
                 crossed = 0;
 
                 // This prevents frequent reading of crossing because of noise around 0 V
-                blank   = BEMF_BLANK_SAMPLES;	// We cant cross again if we crossed once, resetting blank
+                blank_until = read_time_us() + BEMF_BLANK_US;
 			}
 
 
@@ -152,12 +152,14 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 }
 
 // Initialize (park) BLDC by bringing PWM to one phase, one is used as sink and one floating
-void bldc_init(void) {
+void bldc_init(CommutationMode_t mode) {
       bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
       HAL_Delay(ALIGN_SETTLE_MS);
-      measurement_ready = 0;
-      while (!measurement_ready);
-      as5600_set_reference();
+      if (mode == ENCODER_MODE) {
+          measurement_ready = 0;
+          while (!measurement_ready);
+          as5600_set_reference();
+      }
       step = 1;  // ea=0 deg - sector 0 - advanced step = 1
   }
 

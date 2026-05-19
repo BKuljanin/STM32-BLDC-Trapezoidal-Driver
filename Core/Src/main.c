@@ -17,7 +17,7 @@ float speed_setpoint = 1000; 					// Speed setpoint [deg/s]
 float speed_setpoint_ramp_gradient = 100; 		// Speed setpoint ramp gradient [deg/s^2]
 float speed_setpoint_ramp;
 
-CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
+CommutationMode_t commutation_mode = BEMF_MODE; // User can here input ENCODER_MODE or BEMF_MODE
 
 int main(void)
 {
@@ -26,10 +26,11 @@ int main(void)
   SystemClock_Config();
 
   MX_GPIO_Init();
-  MX_I2C1_Init();
 
-  // Initializing AS5600 encoder via I2C
-  as5600_init();
+  if (commutation_mode == ENCODER_MODE) {
+      MX_I2C1_Init();
+      as5600_init();
+  }
 
   // Initializing EN pins for U,V,W PWM commands
   en_uvw_init();
@@ -47,10 +48,11 @@ int main(void)
   tim2_1mhz_init();
 
   // Initializing TIM3 to trigger AS5600 I2C reads at 1 kHz
-  tim3_1khz_it_init();
+  if (commutation_mode == ENCODER_MODE)
+      tim3_1khz_it_init();
 
   // Initialize (park) BLDC motor
-  bldc_init();
+  bldc_init(commutation_mode);
 
   //test_adc_ch_switch();
 
