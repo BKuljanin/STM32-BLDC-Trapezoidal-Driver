@@ -168,23 +168,12 @@ void bldc_test_run(uint32_t delay_ms, uint32_t duty_cycle)
 {
     while(1)
     {
-        bldc_commutate(PHASE_U, PHASE_V, PHASE_W, duty_cycle);  // Step 1
-        HAL_Delay(delay_ms);
-
-        bldc_commutate(PHASE_U, PHASE_W, PHASE_V, duty_cycle);  // Step 2
-        HAL_Delay(delay_ms);
-
-        bldc_commutate(PHASE_V, PHASE_W, PHASE_U, duty_cycle);  // Step 3
-        HAL_Delay(delay_ms);
-
-        bldc_commutate(PHASE_V, PHASE_U, PHASE_W, duty_cycle);  // Step 4
-        HAL_Delay(delay_ms);
-
-        bldc_commutate(PHASE_W, PHASE_U, PHASE_V, duty_cycle);  // Step 5
-        HAL_Delay(delay_ms);
-
-        bldc_commutate(PHASE_W, PHASE_V, PHASE_U, duty_cycle);  // Step 6
-        HAL_Delay(delay_ms);
+        for (int s = 0; s < 6; s++) {
+            step = s;
+            bldc_commutate(step_pwm[s], step_sink[s], step_float[s], duty_cycle);
+            back_emf_float_channel(step_float[s]);
+            HAL_Delay(delay_ms);
+        }
     }
 }
 
