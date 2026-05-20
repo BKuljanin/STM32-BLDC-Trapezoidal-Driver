@@ -8,7 +8,7 @@
 #define BLDC_POLE_PAIRS     7 	 	// Number of poles of BLDC. In this project A2208/14T 1400KV was used
 #define BEMF_BLANK_US       500   	// 500µs blanking after commutation
 #define ALIGN_DUTY_PERCENT  15   	// Duty used to park rotor during alignment
-#define ALIGN_SETTLE_MS     2000  	// Time to wait for rotor to settle
+#define ALIGN_SETTLE_MS     5000  	// Time to wait for rotor to settle
 
 #define OPEN_LOOP_COM_NR	300		// Number of commutations in open loop
 #define OPEN_LOOP_DUTY		10		// Duty cycle of open loop phase
@@ -18,6 +18,8 @@
 extern volatile uint8_t step;
 extern float electrical_angle;
 extern uint32_t commutation_done;
+extern uint8_t sector;
+extern uint8_t new_step;
 
 typedef enum
 {

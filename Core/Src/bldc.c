@@ -7,6 +7,8 @@
 uint8_t volatile step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
 uint32_t commutation_done;
+uint8_t sector;
+uint8_t new_step;
 BLDC_Direction_t bldc_direction = BLDC_REVERSE;
 
 static void phase_enable(BLDC_Phase_t phase)
@@ -67,8 +69,8 @@ void bldc_update_step(void)
     while (ea >= 360.0f) ea -= 360.0f;
     electrical_angle = ea;
 
-    uint8_t sector = (uint8_t)(ea / 60.0f) % 6;
-    uint8_t new_step = (sector + 1) % 6;
+    sector = (uint8_t)(ea / 60.0f) % 6;
+    new_step = (sector + 1) % 6;
 
     if (new_step != step) {
         float lower = (float)sector * 60.0f;
