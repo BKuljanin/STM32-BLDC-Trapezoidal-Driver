@@ -63,7 +63,7 @@ int main(void)
   }
 
   // Test function for running BLDC by commutating and delaying
-  //bldc_test_run((uint32_t)2000, (uint32_t)50);
+  bldc_test_run((uint32_t)500, (uint32_t)50);
 
   while (1)
   {
@@ -87,6 +87,7 @@ int main(void)
 			  Commutation happens with encoder angle translated to electrical angle
 			  Speed measurement is obtained from the encoder */
 			  bldc_run((uint32_t)duty, ENCODER_MODE);
+
 		  }
 	  }
 

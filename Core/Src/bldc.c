@@ -3,6 +3,7 @@
 #include "adc.h"
 #include "as5600.h"
 #include "timer.h"
+#include <math.h>
 
 uint8_t volatile step = 0;  // current commutation step (exposed for debugging)
 float electrical_angle;
@@ -69,15 +70,12 @@ void bldc_update_step(void)
     while (ea >= 360.0f) ea -= 360.0f;
     electrical_angle = ea;
 
-    sector = (uint8_t)(ea / 60.0f) % 6;
-    new_step = (sector + 1) % 6;
+    float ea_adv = ea + 30.0f;
+    if (ea_adv >= 360.0f) ea_adv -= 360.0f;
 
-    if (new_step != step) {
-        float lower = (float)sector * 60.0f;
-        float depth_lo = ea - lower;
-        if (depth_lo >= STEP_HYSTERESIS_DEG)	// Prevents oscillations between 2 phases due to encoder noise
-            step = new_step;
-    }
+    sector = (uint8_t)(ea_adv / 60.0f) % 6;
+    new_step = (sector + 1) % 6;
+    step = new_step;
 }
 
 void bldc_run(uint32_t duty, CommutationMode_t mode)
@@ -161,6 +159,7 @@ void bldc_init(CommutationMode_t mode) {
           measurement_ready = 0;
           while (!measurement_ready);
           as5600_set_reference();
+          HAL_Delay(2000);
       }
       step = 1;  // ea=0 deg - sector 0 - advanced step = 1
   }
