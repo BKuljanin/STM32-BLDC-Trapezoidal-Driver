@@ -17,7 +17,7 @@ float speed_setpoint = 1000; 					// Speed setpoint [deg/s]
 float speed_setpoint_ramp_gradient = 100; 		// Speed setpoint ramp gradient [deg/s^2]
 float speed_setpoint_ramp;
 
-CommutationMode_t commutation_mode = ENCODER_MODE; // User can here input ENCODER_MODE or BEMF_MODE
+CommutationMode_t commutation_mode = BEMF_MODE; // User can here input ENCODER_MODE or BEMF_MODE
 
 int main(void)
 {
@@ -59,11 +59,11 @@ int main(void)
   // Running BLDC in open loop mode to start reading nonzero back EMF
   if (commutation_mode == BEMF_MODE)
   {
-	  bldc_open_loop_run(OPEN_LOOP_DUTY);
+	  //bldc_open_loop_run(OPEN_LOOP_DUTY);
   }
 
   // Test function for running BLDC by commutating and delaying
-  bldc_test_run((uint32_t)500, (uint32_t)50);
+  //bldc_test_run((uint32_t)2000, (uint32_t)30);
 
   while (1)
   {
