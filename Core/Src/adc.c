@@ -105,6 +105,8 @@ void back_emf_adc_init(void)
 	GPIOB->MODER |=  (1U << 30);  // bits [31:30] = 01 → output
 	GPIOB->MODER &= ~(1U << 31);
 
+	// See gpio.c for description of PC9 GPIO
+	GPIOC->BSRR = (1U << (9 + 16));
 }
 
 float adc_to_volts(uint32_t adc_raw_value)

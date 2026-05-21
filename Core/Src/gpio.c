@@ -17,4 +17,13 @@ void en_uvw_init(void)
 	GPIOC->MODER |= (1U<<24); 	// Reference manual p186 01 for GPIO mode
 	GPIOC->MODER &=~ (1U<<25);  // For PC10 bits 21 and 20 are configured to 01 for GPIO mode
 
+	// PC9 for bringing GPIO_BEMF low to measure back emf
+	/* IHM07 reference manual p14 BEMF six step, p9 BEMF detection circuit
+	 * Detection circuit consists of voltage divider, resistors 10kOhm and 2.2kOhm.
+	 * Voltage of floating phase is scaled to 0-3.3V range. PC9 (GPIO_BEMF) is set LOW
+	 * when the bemf should be sampled (to close the circuit) */
+
+	GPIOC->MODER |= (1U<<18);
+	GPIOC->MODER &=~ (1U<<19);
+
 }
