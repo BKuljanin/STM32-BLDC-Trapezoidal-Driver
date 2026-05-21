@@ -59,11 +59,11 @@ int main(void)
   // Running BLDC in open loop mode to start reading nonzero back EMF
   if (commutation_mode == BEMF_MODE)
   {
-	  //bldc_open_loop_run(OPEN_LOOP_DUTY);
+	  bldc_open_loop_run(OPEN_LOOP_DUTY);
   }
 
   // Test function for running BLDC by commutating and delaying
-  //bldc_test_run((uint32_t)2000, (uint32_t)30);
+  bldc_test_run((uint32_t)2000, (uint32_t)30);
 
   while (1)
   {
