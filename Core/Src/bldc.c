@@ -11,6 +11,8 @@ uint32_t commutation_done;
 uint8_t sector;
 uint8_t new_step;
 BLDC_Direction_t bldc_direction = BLDC_REVERSE;
+float bemf_angular_speed = 0.0f;
+float bemf_commutation_dt_s = 0.0f;
 
 static void phase_enable(BLDC_Phase_t phase)
 {
@@ -132,18 +134,19 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 
         	if(crossing_time + half_time <= current_time)
 			{
-
-        		// Reading commutation time in us
         		commutation_time = read_time_us();
-
-        		// Calculating next step, this will cause commutation (called in the beginning of this function)
                 step = (step + 1) % 6;
-
-                // Resetting crossed flag
                 crossed = 0;
-
-                // This prevents frequent reading of crossing because of noise around 0 V
                 blank_until = read_time_us() + BEMF_BLANK_US;
+
+                // 2*half_time = time for 60 electrical degrees = one full commutation step
+                float dt_s = 2.0f * (float)half_time * 1e-6f;
+                float speed_raw = (60.0f / BLDC_POLE_PAIRS) / dt_s;
+                float alpha = 1.0f - expf(-2.0f * (float)M_PI * BEMF_SPEED_LP_CUTOFF * dt_s);
+                if (alpha > 1.0f) alpha = 1.0f;
+                bemf_angular_speed = alpha * speed_raw + (1.0f - alpha) * bemf_angular_speed;
+                bemf_commutation_dt_s = dt_s;
+                commutation_done = 1;
 			}
 
 

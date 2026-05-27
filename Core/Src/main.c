@@ -12,7 +12,7 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
-float duty;
+float duty = 15.0f;
 float speed_setpoint = 1000; 					// Speed setpoint [deg/s]
 float speed_setpoint_ramp_gradient = 100; 		// Speed setpoint ramp gradient [deg/s^2]
 float speed_setpoint_ramp;
@@ -94,7 +94,15 @@ int main(void)
 	  /* BEMF mode */
 	  if (commutation_mode == BEMF_MODE)
 	  {
-		  bldc_run(20, BEMF_MODE);  // runs every loop for fast zero crossing detection
+		  bldc_run((uint32_t)duty, BEMF_MODE);
+
+		  if (commutation_done)
+		  {
+			  commutation_done = 0;
+			  speed_setpoint_ramp = ramp_speed_setpoint(speed_setpoint, speed_setpoint_ramp_gradient, bemf_commutation_dt_s);
+			  duty = pi_controller(speed_setpoint_ramp, bemf_angular_speed, PI_KP, PI_KI,
+					  PI_INTEGRAL_SAT, PI_OUTPUT_SAT_UPPER, PI_OUTPUT_SAT_LOWER, bemf_commutation_dt_s);
+		  }
 	  }
   }
 

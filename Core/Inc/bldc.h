@@ -13,12 +13,15 @@
 #define OPEN_LOOP_COM_NR	300		// Number of commutations in open loop
 #define OPEN_LOOP_DUTY		10		// Duty cycle of open loop phase
 
+#define BEMF_SPEED_LP_CUTOFF  20.0f     // Low-pass cutoff for BEMF speed estimate [Hz]
 
 extern volatile uint8_t step;
 extern float electrical_angle;
 extern uint32_t commutation_done;
 extern uint8_t sector;
 extern uint8_t new_step;
+extern float bemf_angular_speed;
+extern float bemf_commutation_dt_s;
 
 typedef enum
 {
