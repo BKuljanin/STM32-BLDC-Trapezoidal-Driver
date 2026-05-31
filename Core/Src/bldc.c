@@ -157,6 +157,7 @@ void bldc_run(uint32_t duty, CommutationMode_t mode)
 // Initialize (park) BLDC by bringing PWM to one phase, one is used as sink and one floating
 void bldc_init(CommutationMode_t mode) {
       bldc_commutate(step_pwm[0], step_sink[0], step_float[0], ALIGN_DUTY_PERCENT);
+      back_emf_float_channel(step_float[0]);
       HAL_Delay(ALIGN_SETTLE_MS);
       if (mode == ENCODER_MODE) {
           measurement_ready = 0;
