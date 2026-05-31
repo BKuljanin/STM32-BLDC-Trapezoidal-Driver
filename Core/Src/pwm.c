@@ -163,14 +163,19 @@ void tim1_pwm_set_duty_percent(uint32_t duty, BLDC_Phase_t phase)
 
 void tim1_trig_adc(void)
 {
-	// Trigger for ADC conversion set up at ARR (when the current stabilizes and switching noise settles) at channel 4
+	// Trigger ADC at the counter TROUGH (CNT=0) — the centre of the PWM OFF window.
+	// Low-side BEMF sensing: at the trough both driven phases have their low side ON
+	// (high side off), so the floating phase shows BEMF referenced to ~GND in a wide,
+	// settled window (>=25us at our <=50% duty). This is the quiet point furthest from
+	// any switching edge. (Previously triggered at CNT=ARR = centre of the narrow high-
+	// side ON pulse, which at low duty is transient-dominated and unusable.)
 
-	// Loading ARR value of tim 1 (PWM) to capture/compare register for channel 4 (CCR2)
-	TIM1->CCR4 = TIM1->ARR;
+	// CCR4=0 -> compare match once per period at the trough (symmetric to the old ARR/peak match)
+	TIM1->CCR4 = 0;
 
 	// Setting up TIM1 CH4 as output compare in toggle mode
- 	TIM1->CCMR2 |= CCMR1_OC4M_TOGGLE; // Reference manual p495 bits 12-14 OC2M (output compare for channel 2), TOGGLE mode selected (011). Once ARR is reached output is toggled
- 	// Since CH2 output compare is in toggle mode (toggles on ARR), ADC is triggered on both rising and falling edge (see ADC config)
+ 	TIM1->CCMR2 |= CCMR1_OC4M_TOGGLE; // Reference manual p495 bits 12-14 OC4M, TOGGLE mode (011). Output toggles once per period at the CNT=0 match
+ 	// Toggle gives one edge per period at the trough; ADC injected trigger fires on it (both-edge JEXTEN, see adc.c)
 
 	// Enabling TIM1 channel 4 in output mode
 	TIM1->CCER |= CCER_CC4E; // Reference manual p499 bit 4 CC2E

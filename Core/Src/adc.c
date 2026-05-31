@@ -142,7 +142,10 @@ void ADC_IRQHandler(void)
         GPIOB->ODR ^= (1U << 15);     // toggle PB15 — probe here to verify sample timing
         back_emf_raw = ADC1->JDR1;    // Read result from injected data register
         ADC1->SR &= ~(1U << 2);       // Clear JEOC flag
-        floating_phase_back_emf = adc_to_volts(back_emf_raw) - VBUS_HALF;
+        // Low-side / off-time sensing: floating phase is referenced to ~GND, NOT Vbus/2.
+        // Keep the raw phase voltage (no - VBUS_HALF). Zero-cross will sit at a small
+        // positive value (~diode offset), to be read off the scope and set later.
+        floating_phase_back_emf = adc_to_volts(back_emf_raw);
         counter++;
         if (counter >= 3)
         {
